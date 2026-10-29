@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Паллетный калькулятор</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Паллетный калькулятор</h1>
+    <p>Сколько паллет встанет на пол кузова — с учётом поворота, зазоров и грузоподъёмности</p>
+  </header>
+
+  <main class="layout">
+    <section class="inputs">
+      <div class="tabs" role="tablist" aria-label="Режим расчёта">
+        <button type="button" role="tab" id="modeSingle" aria-selected="true">Один тип паллет</button>
+        <button type="button" role="tab" id="modeMixed" aria-selected="false">Сборный груз</button>
+      </div>
+
+      <form class="card" id="truckCard" autocomplete="off">
+        <h2>Кузов</h2>
+        <label class="field">Шаблон
+          <select id="truckPreset"></select>
+        </label>
+        <div class="row">
+          <label class="field">Длина, мм <input id="truckLength" type="number" min="1" step="1" inputmode="numeric"></label>
+          <label class="field">Ширина, мм <input id="truckWidth" type="number" min="1" step="1" inputmode="numeric"></label>
+        </div>
+        <label class="field">Грузоподъёмность, кг <input id="truckPayload" type="number" min="0" step="1" inputmode="numeric"></label>
+        <div class="actions">
+          <button type="button" class="ghost" id="saveTruck">Сохранить как шаблон</button>
+          <button type="button" class="ghost danger" id="deleteTruck" hidden>Удалить шаблон</button>
+        </div>
+        <div class="tpl-form" id="truckTplForm" hidden>
+          <input id="truckTplName" type="text" aria-label="Название шаблона кузова" placeholder="Название шаблона">
+          <button type="button" id="truckTplOk">Сохранить</button>
+          <button type="button" class="ghost" id="truckTplCancel">Отмена</button>
+        </div>
+      </form>
+
+      <form class="card" id="palletCard" autocomplete="off">
+        <h2>Паллета</h2>
+        <label class="field">Шаблон
+          <select id="palletPreset"></select>
+        </label>
+        <div class="row">
+          <label class="field">Длина, мм <input id="palletLength" type="number" min="1" step="1" inputmode="numeric"></label>
+          <label class="field">Ширина, мм <input id="palletWidth" type="number" min="1" step="1" inputmode="numeric"></label>
+        </div>
+        <label class="field">Вес одной паллеты с грузом, кг <input id="palletWeight" type="number" min="0" step="1" inputmode="numeric"></label>
+        <label class="check"><input id="allowRotate" type="checkbox" checked> Можно ставить и вдоль, и поперёк</label>
+        <div class="actions">
+          <button type="button" class="ghost" id="savePallet">Сохранить как шаблон</button>
+          <button type="button" class="ghost danger" id="deletePallet" hidden>Удалить шаблон</button>
+        </div>
+        <div class="tpl-form" id="palletTplForm" hidden>
+          <input id="palletTplName" type="text" aria-label="Название шаблона паллеты" placeholder="Название шаблона">
+          <button type="button" id="palletTplOk">Сохранить</button>
+          <button type="button" class="ghost" id="palletTplCancel">Отмена</button>
+        </div>
+      </form>
+
+      <form class="card" id="mixedCard" autocomplete="off" hidden>
+        <h2>Груз</h2>
+        <div class="items" id="items"></div>
+        <div class="actions">
+          <button type="button" class="ghost" id="addItem">+ Добавить позицию</button>
+        </div>
+        <p class="hint">«Ещё влезет» — сколько паллет этого типа можно догрузить к текущему набору, с учётом места и веса.</p>
+      </form>
+
+      <form class="card" id="optionsCard" autocomplete="off">
+        <h2>Параметры</h2>
+        <div class="row">
+          <label class="field">Зазор между паллетами, мм <input id="gap" type="number" min="0" step="1" value="0" inputmode="numeric"></label>
+          <label class="field" id="needField">Нужно отправить, шт <input id="need" type="number" min="0" step="1" placeholder="необязательно" inputmode="numeric"></label>
+        </div>
+        <p class="hint">На практике оставляют 20–50 мм, чтобы паллеты можно было завести погрузчиком.</p>
+      </form>
+    </section>
+
+    <section class="results">
+      <div class="card result" aria-live="polite">
+        <div class="big"><span id="resCount">—</span><span id="resUnit"></span></div>
+        <p class="verdict" id="resVerdict"></p>
+        <dl class="stats" id="resStats"></dl>
+      </div>
+
+      <div class="card">
+        <div class="schema-head">
+          <h2>Схема загрузки (вид сверху)</h2>
+          <ul class="legend" id="legend"></ul>
+        </div>
+        <div class="schema" id="schema"></div>
+      </div>
+
+      <form class="card" id="saveCard" autocomplete="off">
+        <h2>Сохранить расчёт</h2>
+        <div class="row nowrap">
+          <input id="calcName" type="text" placeholder="Например: Заказ №125, Москва → Казань">
+          <button type="submit" id="saveCalc">Сохранить</button>
+        </div>
+      </form>
+
+      <div class="card">
+        <h2>История расчётов</h2>
+        <ul class="history" id="history"></ul>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <script src="js/presets.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/packing.js"></script>
+  <script src="js/mixed.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
