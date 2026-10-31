@@ -1,6 +1,10 @@
 // Расчёт раскладки паллет по полу кузова (один ярус).
 // Ось X — длина кузова (от кабины к воротам), ось Y — ширина. Все размеры в мм.
 var Packing = (function () {
+  // Паллеты со стороной меньше этого не считаем: пока человек печатает «1200», в поле бывает «1» или «12»,
+  // а раскладка тысяч крошечных паллет подвешивает страницу.
+  var MIN_SIDE = 100;
+
   // Все значения a*l + b*w, не превышающие limit («нормальные точки»).
   // Оптимальную гильотинную раскладку достаточно искать среди разрезов в этих точках.
   function normalPoints(limit, sizes) {
@@ -36,7 +40,7 @@ var Packing = (function () {
     var L0 = Math.floor(truckLength), W0 = Math.floor(truckWidth);
     var l0 = Math.floor(palletLength), w0 = Math.floor(palletWidth);
     var empty = { count: 0, placements: [], usedLength: 0, floorUsage: 0 };
-    if (!(L0 > 0 && W0 > 0 && l0 > 0 && w0 > 0)) return empty;
+    if (!(L0 > 0 && W0 > 0 && l0 >= MIN_SIDE && w0 >= MIN_SIDE)) return empty;
     var L = L0 + g, W = W0 + g, l = l0 + g, w = w0 + g;
 
     var xs = normalPoints(L, allowRotate ? [l, w] : [l]);
@@ -169,5 +173,5 @@ var Packing = (function () {
     };
   }
 
-  return { pack: pack, blockPack: blockPack, compact: compact, applyWeight: applyWeight };
+  return { MIN_SIDE: MIN_SIDE, pack: pack, blockPack: blockPack, compact: compact, applyWeight: applyWeight };
 })();

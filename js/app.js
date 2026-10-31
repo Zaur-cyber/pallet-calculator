@@ -221,12 +221,13 @@
     last = { mode: 'single', truck: c.truck, gap: c.gap, pallet: pallet, allowRotate: allowRotate, need: need, floor: floor, weight: weight };
 
     var count = weight.count, verdict = $('resVerdict');
-    var ready = c.truck.length && c.truck.width && pallet.length && pallet.width;
+    var tooSmall = isTooSmall(pallet);
+    var ready = c.truck.length && c.truck.width && pallet.length && pallet.width && !tooSmall;
     $('resCount').textContent = ready ? fmt(count) : '—';
     $('resUnit').textContent = ready ? palletsWord(count) + ' в машину' : '';
 
     if (!ready) {
-      setVerdict('', 'Введите размеры кузова и паллеты');
+      setVerdict('', tooSmall ? MIN_SIDE_TEXT : 'Введите размеры кузова и паллеты');
       $('resStats').innerHTML = '';
       renderSchema(null);
       return;
@@ -264,18 +265,26 @@
     }, legend);
   }
 
+  // Сторона паллеты введена, но меньше минимума (обычно — человек ещё печатает число).
+  var MIN_SIDE_TEXT = 'Сторона паллеты — не меньше ' + Packing.MIN_SIDE + ' мм';
+  function isTooSmall(p) {
+    return (p.length > 0 && p.length < Packing.MIN_SIDE) || (p.width > 0 && p.width < Packing.MIN_SIDE);
+  }
+
   function calculateMixed() {
     var c = common();
     var res = Mixed.pack(c.truck.length, c.truck.width, items, c.gap);
     var totalWeight = items.reduce(function (s, it) { return s + (it.weight || 0) * (it.qty || 0); }, 0);
     last = { mode: 'mixed', truck: c.truck, gap: c.gap, items: items.map(function (it) { return Object.assign({}, it); }), result: res };
 
-    var ready = c.truck.length && c.truck.width && res.total > 0;
+    var tooSmall = items.some(function (it) { return it.qty > 0 && isTooSmall(it); });
+    var ready = c.truck.length && c.truck.width && res.total > 0 && !tooSmall;
     $('resCount').textContent = ready ? fmt(res.placed) + ' / ' + fmt(res.total) : '—';
     $('resUnit').textContent = ready ? palletsWord(res.total) + ' встаёт' : '';
 
     if (!ready) {
-      setVerdict('', c.truck.length && c.truck.width ? 'Добавьте паллеты в груз' : 'Введите размеры кузова');
+      setVerdict('', !(c.truck.length && c.truck.width) ? 'Введите размеры кузова'
+        : tooSmall ? MIN_SIDE_TEXT : 'Добавьте паллеты в груз');
       $('resStats').innerHTML = '';
       renderSchema(null);
       renderExtras(null);

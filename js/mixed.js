@@ -151,7 +151,7 @@ var Mixed = (function () {
     items = items.map(function (it) {
       return {
         length: Math.floor(it.length) || 0, width: Math.floor(it.width) || 0,
-        qty: it.length > 0 && it.width > 0 ? Math.max(0, Math.floor(it.qty) || 0) : 0,
+        qty: it.length >= Packing.MIN_SIDE && it.width >= Packing.MIN_SIDE ? Math.max(0, Math.floor(it.qty) || 0) : 0,
         allowRotate: it.allowRotate !== false
       };
     });
@@ -184,7 +184,7 @@ var Mixed = (function () {
   // Сколько ещё паллет типа index можно добавить к текущему набору (с учётом веса, если задан).
   function extraCapacity(truck, items, index, gap) {
     var it = items[index];
-    if (!(it.length > 0 && it.width > 0)) return 0;
+    if (!(it.length >= Packing.MIN_SIDE && it.width >= Packing.MIN_SIDE)) return 0;
     if (!pack(truck.length, truck.width, items, gap, { trials: 10 }).allFit) return 0;
 
     var usedArea = 0, usedWeight = 0;
